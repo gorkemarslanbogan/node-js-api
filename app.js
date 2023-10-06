@@ -9,7 +9,6 @@ app.post('/kullanici-ekle', UserController.createUser);
 app.get('/kullanicilar/:id', UserController.getUserById);
 
 app.listen(port, () => {
- // print("Test");
   console.log(`API dinleniyor: http://localhost:${port}`);
 });
 

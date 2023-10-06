@@ -1,12 +1,14 @@
 
 const db = require('../config/dbConnection');
 const HttpStatusCodes = require('../utils/HttpResponses');
+const PasswordHash = require('../utils/PasswordHash');
 
 exports.createUser = (req, res) => {
     const { username, password, firstname, lastname, api_key } = req.body;
-  
+    const hashedPassword = PasswordHash.hashPassword(password);
+
     const insertQuery = 'INSERT INTO users (username, password, firstname, lastname, api_key) VALUES (?, ?, ?, ?, ?)';
-    const values = [username, password, firstname, lastname, api_key];
+    const values = [username, hashedPassword, firstname, lastname, api_key];
   
     db.query(insertQuery, values, (err, results) => {
       if (err) {
@@ -83,7 +85,26 @@ exports.createUser = (req, res) => {
       if (results.affectedRows === 0) {
         return res.status(500).json({ error: 'Kullanıcı bulunamadı.' });
       }
-  
+
       return res.status(200).json();
     });
   };
+
+  exports.updatePassword = (req, res) => {
+    const userId = req.params.id;
+    const  {newPassword} = req.body;
+    const hashedNewPassword = PasswordHash.hashPassword(newPassword);
+    const query = 'UPDATE users SET password = ? WHERE id = ?';
+    const values = [hashedNewPassword, userId];
+    db.query(query, values, (err, results) => {
+      if(err){
+        console.log('Şifre Güncelleme Hatası', err);
+        return res.status(500).json({error: 'Şifre Güncelleme Hatası.'});
+      }
+      if (results.affectedRows === 1) {
+        return res.status(200).json({ message: 'Şifre başarıyla güncellendi.' });
+      } else {
+        return res.status(404).json({ error: 'Kullanıcı bulunamadı veya şifre güncellenemedi.' });
+      }
+    });
+  }
